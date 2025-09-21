@@ -173,7 +173,7 @@ export class FTMSService {
       // Total distance is 3 bytes
       const distanceLow = value.getUint16(position, true);
       const distanceHigh = value.getUint8(position + 2);
-      data.distance = (distanceHigh << 16 | distanceLow) * 0.1; // resolution 0.1 m
+      data.distance = (distanceHigh << 16 | distanceLow) * 1; // resolution 1 m
       position += 3;
     }
 
