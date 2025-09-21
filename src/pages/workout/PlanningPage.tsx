@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WorkoutPlan } from '@/types';
 import { storageManager } from '@/core/storage/local-storage-manager';
 import { createWorkoutTemplates, getTemplatesByDifficulty } from '@/core/workout/workout-templates';
@@ -11,6 +11,9 @@ export default function PlanningPage() {
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
   const [templates, setTemplates] = useState<WorkoutPlan[]>([]);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutPlan | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadWorkouts();
@@ -80,6 +83,128 @@ export default function PlanningPage() {
     } catch (error) {
       console.error('Failed to copy template:', error);
       alert('Failed to copy template');
+    }
+  };
+
+  const handleExportWorkouts = async () => {
+    try {
+      if (workoutPlans.length === 0) {
+        alert('No custom workouts to export');
+        return;
+      }
+
+      const exportData = {
+        exportInfo: {
+          exportedAt: new Date().toISOString(),
+          format: 'json',
+          type: 'custom-workouts',
+          version: '1.0'
+        },
+        workouts: workoutPlans,
+        count: workoutPlans.length
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `opensweat-custom-workouts-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      alert(`Successfully exported ${workoutPlans.length} custom workouts!`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export workouts. Please try again.');
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      setImportStatus('Please select a JSON file.');
+      setTimeout(() => setImportStatus(''), 3000);
+      return;
+    }
+
+    setIsImporting(true);
+    setImportStatus('Reading file...');
+
+    try {
+      const fileContent = await file.text();
+      const data = JSON.parse(fileContent);
+
+      // Validate the import data structure
+      if (!data.exportInfo || data.exportInfo.type !== 'custom-workouts') {
+        throw new Error('Invalid file format. Please select a valid custom workouts export file.');
+      }
+
+      if (!data.workouts || !Array.isArray(data.workouts)) {
+        throw new Error('No valid workout data found in the file.');
+      }
+
+      setImportStatus('Importing workouts...');
+
+      const importDate = new Date(data.exportInfo.exportedAt).toLocaleDateString();
+      if (!confirm(`Import ${data.workouts.length} custom workouts from ${importDate}? This will add to your existing workouts.`)) {
+        setIsImporting(false);
+        setImportStatus('');
+        return;
+      }
+
+      let imported = 0;
+      const errors = [];
+
+      for (const workout of data.workouts) {
+        try {
+          // Create a new workout with updated IDs and timestamps
+          const newWorkout: WorkoutPlan = {
+            ...workout,
+            id: `workout_${Date.now()}_${imported}`,
+            name: workout.name.endsWith('(Imported)') ? workout.name : `${workout.name} (Imported)`,
+            isTemplate: false,
+            createdAt: Date.now(),
+            modifiedAt: Date.now()
+          };
+
+          await storageManager.saveWorkout(newWorkout);
+          imported++;
+        } catch (error) {
+          errors.push(`Failed to import "${workout.name}": ${error}`);
+        }
+      }
+
+      await loadWorkouts();
+
+      if (imported > 0) {
+        setImportStatus(`Successfully imported ${imported} workouts!`);
+      } else {
+        setImportStatus('No workouts were imported.');
+      }
+
+      if (errors.length > 0) {
+        console.error('Import errors:', errors);
+        alert(`Import completed with errors. ${imported} workouts imported, ${errors.length} failed.`);
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      setImportStatus(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsImporting(false);
+      setTimeout(() => setImportStatus(''), 5000);
+
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -326,19 +451,73 @@ export default function PlanningPage() {
         </button>
       </div>
 
+      {/* Export/Import Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start space-x-3">
+          <div className="text-blue-600">💡</div>
+          <div>
+            <h3 className="font-medium text-blue-900">Export & Import Your Workouts</h3>
+            <p className="text-sm text-blue-800 mt-1">
+              Export your custom workouts to share with friends or back them up. Import workouts from JSON files to expand your collection.
+            </p>
+            <ul className="text-xs text-blue-700 mt-2 space-y-1">
+              <li>• Export creates a JSON file with all your custom workouts</li>
+              <li>• Import adds workouts to your collection (doesn't replace existing ones)</li>
+              <li>• Imported workouts are marked with "(Imported)" suffix</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* My Workouts List */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             Custom Workouts ({workoutPlans.length})
           </h3>
-          <button
-            onClick={handleCreateWorkout}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Create New
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleImportClick}
+              disabled={isImporting}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isImporting ? 'Importing...' : 'Import'}
+            </button>
+            <button
+              onClick={handleExportWorkouts}
+              disabled={workoutPlans.length === 0}
+              className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Export
+            </button>
+            <button
+              onClick={handleCreateWorkout}
+              className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Create New
+            </button>
+          </div>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        {/* Import Status */}
+        {importStatus && (
+          <div className={`mb-4 p-3 rounded-lg ${
+            importStatus.includes('failed') || importStatus.includes('error') ? 'bg-red-50 text-red-800' :
+            importStatus.includes('Successfully') ? 'bg-green-50 text-green-800' :
+            'bg-blue-50 text-blue-800'
+          }`}>
+            {importStatus}
+          </div>
+        )}
 
         {workoutPlans.length > 0 ? (
           <div className="space-y-3">

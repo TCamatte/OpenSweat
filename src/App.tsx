@@ -19,7 +19,8 @@ function App() {
     setOnlineStatus,
     loadSettings,
     loadRecentSessions,
-    attemptAutoReconnect
+    attemptAutoReconnect,
+    activeWorkout
   } = useAppStore();
 
   useEffect(() => {
@@ -48,6 +49,23 @@ function App() {
 
     return unsubscribe;
   }, [setOnlineStatus, loadSettings, loadRecentSessions, attemptAutoReconnect]);
+
+  // Set up page refresh warning when workout is in progress
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (activeWorkout && !activeWorkout.isPaused) {
+        event.preventDefault();
+        event.returnValue = 'You have an active workout in progress. Are you sure you want to leave? Your workout data may be lost.';
+        return event.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [activeWorkout]);
 
   return (
     <Router>

@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { storageManager } from '@/core/storage/local-storage-manager';
 import { useAppStore } from '@/core/storage/app-store';
+import { ExportData, ImportResult } from '@/types';
 
 export default function DataManagement() {
   const [isClearing, setIsClearing] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<string>('');
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { loadRecentSessions } = useAppStore();
 
   const loadStats = async () => {
@@ -99,6 +104,79 @@ export default function DataManagement() {
     }
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      setImportStatus('Please select a JSON file exported from OpenSweat.');
+      setTimeout(() => setImportStatus(''), 3000);
+      return;
+    }
+
+    setIsImporting(true);
+    setImportStatus('Reading file...');
+    setImportResult(null);
+
+    try {
+      const fileContent = await file.text();
+      const data: ExportData = JSON.parse(fileContent);
+
+      // Validate the import data structure
+      if (!data.exportInfo?.version && !data.version) {
+        throw new Error('Invalid file format. Please select a valid OpenSweat export file.');
+      }
+
+      // Ensure required arrays exist
+      data.workouts = data.workouts || [];
+      data.sessions = data.sessions || [];
+      data.equipment = data.equipment || [];
+      data.personalRecords = data.personalRecords || [];
+
+      setImportStatus('Importing data...');
+
+      const exportDate = data.exportInfo?.exportedAt || (data.exportedAt ? new Date(data.exportedAt).toISOString() : 'unknown date');
+      const displayDate = exportDate === 'unknown date' ? exportDate : new Date(exportDate).toLocaleDateString();
+
+      if (!confirm(`Import data from ${displayDate}? This will add to your existing data.`)) {
+        setIsImporting(false);
+        setImportStatus('');
+        return;
+      }
+
+      const result = await storageManager.importData(data);
+      setImportResult(result);
+
+      if (result.success) {
+        setImportStatus('Import completed successfully!');
+        await loadRecentSessions();
+        await loadStats();
+      } else {
+        setImportStatus('Import completed with errors. Check details below.');
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      setImportStatus(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsImporting(false);
+      setTimeout(() => {
+        if (!importResult || importResult.success) {
+          setImportStatus('');
+          setImportResult(null);
+        }
+      }, 5000);
+
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Database Statistics */}
@@ -132,6 +210,102 @@ export default function DataManagement() {
         >
           Refresh Stats
         </button>
+      </div>
+
+      {/* Data Import */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Import Data</h3>
+
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-1">
+                <h4 className="font-medium text-blue-900">Import JSON Data</h4>
+                <p className="text-sm text-blue-800 mt-1">
+                  Import workout data from a JSON file exported from OpenSweat.
+                  This will add the imported data to your existing workouts, sessions, and records.
+                </p>
+              </div>
+              <button
+                onClick={handleImportClick}
+                disabled={isImporting}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                {isImporting ? 'Importing...' : 'Select File'}
+              </button>
+            </div>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
+
+          {/* Import Status */}
+          {importStatus && (
+            <div className={`p-3 rounded-lg ${
+              importStatus.includes('failed') || importStatus.includes('error') ? 'bg-red-50 text-red-800' :
+              importStatus.includes('completed successfully') ? 'bg-green-50 text-green-800' :
+              'bg-blue-50 text-blue-800'
+            }`}>
+              {importStatus}
+            </div>
+          )}
+
+          {/* Import Results */}
+          {importResult && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-2">Import Results</h4>
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Workouts imported:</span>
+                  <span className="font-medium text-green-600">{importResult.imported.workouts}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Sessions imported:</span>
+                  <span className="font-medium text-green-600">{importResult.imported.sessions}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Equipment imported:</span>
+                  <span className="font-medium text-green-600">{importResult.imported.equipment}</span>
+                </div>
+                {importResult.errors.length > 0 && (
+                  <div className="mt-3">
+                    <span className="text-red-600 font-medium">Errors ({importResult.errors.length}):</span>
+                    <ul className="mt-1 space-y-1">
+                      {importResult.errors.slice(0, 5).map((error, index) => (
+                        <li key={index} className="text-xs text-red-600 pl-2">• {error}</li>
+                      ))}
+                      {importResult.errors.length > 5 && (
+                        <li className="text-xs text-red-600 pl-2">• ... and {importResult.errors.length - 5} more errors</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Import Instructions */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start space-x-2">
+              <span className="text-amber-600">ℹ️</span>
+              <div>
+                <h4 className="font-medium text-amber-900">Import Guidelines</h4>
+                <ul className="text-sm text-amber-800 mt-1 space-y-1">
+                  <li>• Only JSON files exported from OpenSweat are supported</li>
+                  <li>• Import adds to existing data (does not replace)</li>
+                  <li>• Duplicate data may be created if importing the same file multiple times</li>
+                  <li>• Large files may take a moment to process</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Data Management Actions */}

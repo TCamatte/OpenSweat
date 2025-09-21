@@ -142,13 +142,21 @@ export interface FTMSData {
 
 // Export/Import types
 export interface ExportData {
-  version: string;
-  exportedAt: number;
+  version?: string;
+  exportedAt?: number;
   workouts: WorkoutPlan[];
   sessions: WorkoutSession[];
   equipment: EquipmentProfile[];
-  settings: AppSettings;
+  settings?: AppSettings;
   personalRecords: PersonalRecord[];
+  analytics?: any;
+  exportInfo?: {
+    exportedAt: string;
+    timeRange: string;
+    format: string;
+    includeRawData: boolean;
+    version: string;
+  };
 }
 
 export interface ImportResult {
