@@ -210,17 +210,16 @@ export class FTMSService {
 
     // FTMS Control Point - Set Target Resistance Level
     // OpCode: 0x04, Parameter: resistance level (0.1 increments)
-    const command = new Uint8Array(3);
+    const command = new Uint8Array(2);
     command[0] = 0x04; // Set Target Resistance Level
 
     // Convert percentage to FTMS resistance units (0.1 increments)
-    const resistanceValue = Math.round(level * 10);
+    const resistanceValue = Math.round(level);
     command[1] = resistanceValue & 0xFF;
-    command[2] = (resistanceValue >> 8) & 0xFF;
 
     try {
-      await this.controlCharacteristic.writeValue(command);
-      console.log(`Set resistance level to ${level}%`);
+      var result = await this.controlCharacteristic.writeValue(command);
+      console.log(`Set resistance level to ${level}%. Response: ${result}`);
     } catch (error) {
       console.error('Failed to set resistance level:', error);
       throw error;
@@ -240,7 +239,7 @@ export class FTMSService {
     command[2] = (watts >> 8) & 0xFF;
 
     try {
-      await this.controlCharacteristic.writeValue(command);
+      //await this.controlCharacteristic.writeValue(command);
       console.log(`Set target power to ${watts}W`);
     } catch (error) {
       console.error('Failed to set target power:', error);

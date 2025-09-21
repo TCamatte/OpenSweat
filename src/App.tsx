@@ -11,6 +11,7 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 import HomePage from '@/pages/HomePage';
 import ConnectPage from '@/pages/connect/ConnectPage';
 import WorkoutPage from '@/pages/workout/WorkoutPage';
+import PlanningPage from '@/pages/workout/PlanningPage';
 import HistoryPage from '@/pages/history/HistoryPage';
 
 function App() {
@@ -51,6 +52,7 @@ function App() {
             <Route path="/connect" element={<ConnectPage />} />
             <Route path="/workout" element={<WorkoutPage />} />
             <Route path="/workout/:workoutId" element={<WorkoutPage />} />
+            <Route path="/planning" element={<PlanningPage />} />
             <Route path="/history" element={<HistoryPage />} />
           </Routes>
         </Layout>

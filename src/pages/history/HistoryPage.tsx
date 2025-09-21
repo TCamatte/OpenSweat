@@ -1,35 +1,75 @@
+import { useState } from 'react';
+import WorkoutSummary from '@/components/analytics/WorkoutSummary';
+import WorkoutHistory from '@/components/analytics/WorkoutHistory';
+import PerformanceInsights from '@/components/analytics/PerformanceInsights';
+import PersonalRecords from '@/components/analytics/PersonalRecords';
+import DataExport from '@/components/analytics/DataExport';
+
+type TabType = 'summary' | 'history' | 'insights' | 'records' | 'export';
+
 export default function HistoryPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('summary');
+
+  const tabs = [
+    { id: 'summary' as TabType, label: 'Summary', icon: '📊' },
+    { id: 'history' as TabType, label: 'History', icon: '📋' },
+    { id: 'insights' as TabType, label: 'Insights', icon: '📈' },
+    { id: 'records' as TabType, label: 'Records', icon: '🏆' },
+    { id: 'export' as TabType, label: 'Export', icon: '📤' }
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'summary':
+        return <WorkoutSummary />;
+      case 'history':
+        return <WorkoutHistory />;
+      case 'insights':
+        return <PerformanceInsights />;
+      case 'records':
+        return <PersonalRecords />;
+      case 'export':
+        return <DataExport />;
+      default:
+        return <WorkoutSummary />;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Workout History
+          Analytics & History
         </h2>
         <p className="text-gray-600">
-          View your past sessions and progress
+          Track your progress and analyze your performance
         </p>
       </div>
 
-      {/* Coming Soon */}
-      <div className="text-center py-16">
-        <div className="text-6xl mb-4">📊</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          History Features Coming Soon
-        </h3>
-        <p className="text-gray-600 mb-6">
-          This section will show your workout history, analytics, and progress tracking.
-        </p>
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-left max-w-sm mx-auto">
-          <h4 className="font-semibold text-green-900 mb-2">Planned Features:</h4>
-          <ul className="text-sm text-green-800 space-y-1">
-            <li>• Session history list</li>
-            <li>• Performance analytics</li>
-            <li>• Progress charts</li>
-            <li>• Personal records</li>
-            <li>• Data export</li>
-          </ul>
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
+      </div>
+
+      {/* Content */}
+      <div>
+        {renderContent()}
       </div>
     </div>
   );

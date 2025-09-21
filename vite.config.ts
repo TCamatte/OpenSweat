@@ -2,9 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import mkcert from 'vite-plugin-mkcert'
 
 export default defineConfig({
   plugins: [
+    //mkcert(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -42,9 +44,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'safari-pinned-tab.svg'],
       manifest: {
-        name: 'Domyos Workout Trainer',
-        short_name: 'DomyosTrainer',
-        description: 'Local-first PWA for Domyos fitness equipment workout tracking',
+        name: 'OpenSweat',
+        short_name: 'OpenSweat',
+        description: 'Vibe-clauded PWA for workouts on Domyos connected equipment',
         theme_color: '#3b82f6',
         background_color: '#1f2937',
         display: 'standalone',
@@ -56,12 +58,6 @@ export default defineConfig({
         lang: 'en',
         dir: 'ltr',
         icons: [
-          {
-            src: 'pwa-64x64.png',
-            sizes: '64x64',
-            type: 'image/png',
-            purpose: 'any'
-          },
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
@@ -80,36 +76,7 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           }
-        ],
-        shortcuts: [
-          {
-            name: 'Quick Workout',
-            description: 'Start a quick workout session',
-            url: '/workout',
-            icons: [
-              {
-                src: 'pwa-192x192.png',
-                sizes: '192x192',
-                type: 'image/png'
-              }
-            ]
-          },
-          {
-            name: 'Connect Device',
-            description: 'Connect to your Domyos equipment',
-            url: '/connect',
-            icons: [
-              {
-                src: 'pwa-192x192.png',
-                sizes: '192x192',
-                type: 'image/png'
-              }
-            ]
-          }
         ]
-      },
-      devOptions: {
-        enabled: true
       }
     })
   ],

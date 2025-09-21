@@ -56,6 +56,24 @@ export default function HomePage() {
         </Link>
       </div>
 
+      {/* Planning Section */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-blue-900">Plan Your Workouts</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              Create custom workouts offline - no equipment needed
+            </p>
+          </div>
+          <Link
+            to="/planning"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Plan
+          </Link>
+        </div>
+      </div>
+
       {/* Active Workout */}
       {activeWorkout && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">

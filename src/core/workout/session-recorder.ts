@@ -16,7 +16,7 @@ export class SessionRecorder {
 
   async startSession(
     workoutPlan: WorkoutPlan,
-    equipment: EquipmentProfile
+    equipment: EquipmentProfile | null
   ): Promise<string> {
     if (this.isRecording) {
       throw new Error('A session is already being recorded');
@@ -28,7 +28,7 @@ export class SessionRecorder {
       id: `session_${this.startTime}`,
       workoutId: workoutPlan.id,
       workoutName: workoutPlan.name,
-      equipmentId: equipment.id,
+      equipmentId: equipment?.id || 'offline',
       startTime: this.startTime,
       dataPoints: [],
       notes: ''
