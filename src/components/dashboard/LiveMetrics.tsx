@@ -6,9 +6,10 @@ import MetricCard from './MetricCard';
 
 interface LiveMetricsProps {
   isActive?: boolean;
+  compact?: boolean;
 }
 
-export default function LiveMetrics({ isActive = false }: LiveMetricsProps) {
+export default function LiveMetrics({ isActive = false, compact = false }: LiveMetricsProps) {
   const [liveData, setLiveData] = useState<FTMSData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { updateMetrics, targetMetrics } = useWorkoutStore();
@@ -85,6 +86,52 @@ export default function LiveMetrics({ isActive = false }: LiveMetricsProps) {
     if (current < target * 0.95) return 'down';
     return 'stable';
   };
+
+  if (compact) {
+    return (
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <div className="text-sm font-medium text-gray-700 mb-3">Live Data</div>
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-xl">🚴</span>
+            <span className="text-lg font-bold">{(liveData.speed || 0).toFixed(1)}</span>
+            <span className="text-sm text-gray-500">km/h</span>
+          </div>
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-xl">🔄</span>
+            <span className="text-lg font-bold">{(liveData.cadence || 0).toFixed(0)}</span>
+            <span className="text-sm text-gray-500">rpm</span>
+          </div>
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-xl">⚡</span>
+            <span className="text-lg font-bold">{(liveData.power || 0).toFixed(0)}</span>
+            <span className="text-sm text-gray-500">W</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 text-center mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-xl">🏔️</span>
+            <span className="text-lg font-bold">{(liveData.resistance || 0).toFixed(0)}</span>
+            <span className="text-sm text-gray-500">%</span>
+          </div>
+          {liveData.heartRate ? (
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-xl">❤️</span>
+              <span className="text-lg font-bold">{liveData.heartRate}</span>
+              <span className="text-sm text-gray-500">bpm</span>
+            </div>
+          ) : (
+            <div></div>
+          )}
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-xl">📏</span>
+            <span className="text-lg font-bold">{((liveData.distance || 0) / 1000).toFixed(2)}</span>
+            <span className="text-sm text-gray-500">km</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

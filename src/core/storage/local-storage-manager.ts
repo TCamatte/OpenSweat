@@ -343,6 +343,31 @@ export class LocalStorageManager {
     });
   }
 
+  async clearHistoryData(): Promise<void> {
+    await db.transaction('rw', db.sessions, db.metrics, async () => {
+      await Promise.all([
+        db.sessions.clear(),
+        db.metrics.clear()
+      ]);
+    });
+  }
+
+  async clearAnalyticsData(): Promise<void> {
+    await db.transaction('rw', db.sessions, db.metrics, db.records, async () => {
+      await Promise.all([
+        db.sessions.clear(),
+        db.metrics.clear(),
+        db.records.clear()
+      ]);
+    });
+  }
+
+  async clearWorkoutPlans(): Promise<void> {
+    await db.transaction('rw', db.workouts, async () => {
+      await db.workouts.where('isTemplate').equals(false).delete();
+    });
+  }
+
   async getDatabaseStats() {
     const [workoutCount, sessionCount, equipmentCount, recordCount] = await Promise.all([
       db.workouts.count(),

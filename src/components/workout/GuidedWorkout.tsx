@@ -4,6 +4,7 @@ import { workoutEngine, WorkoutEngineState } from '@/core/workout/workout-engine
 import { deviceManager } from '@/core/bluetooth/device-manager';
 import { useAppStore } from '@/core/storage/app-store';
 import LiveMetrics from '@/components/dashboard/LiveMetrics';
+import WorkoutAverages from '@/components/dashboard/WorkoutAverages';
 
 interface GuidedWorkoutProps {
   workoutPlan: WorkoutPlan;
@@ -61,21 +62,7 @@ export default function GuidedWorkout({
     try {
       // Prevent multiple starts
       if (workoutStarted) return;
-      console.log("64");
       await startGuidedWorkout();
-      // Start countdown
-      // setCountdown(3);
-      // const countdownInterval = setInterval(() => {
-      //   setCountdown((prev) => {
-      //     if (prev === 1) {
-      //       clearInterval(countdownInterval);
-      //       console.log("71");
-      //       startGuidedWorkout();
-      //       return 0;
-      //     }
-      //     return prev - 1;
-      //   });
-      // }, 1000);
     } catch (error) {
       console.error('Failed to start workout:', error);
       alert('Failed to start workout. Please try again.');
@@ -303,86 +290,72 @@ export default function GuidedWorkout({
   const nextStep = engineState.nextStep;
 
   return (
-    <div className="space-y-6">
-      {/* Progress Header */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">{workoutPlan.name}</h2>
-          <div className="text-sm text-gray-600">
-            Step {engineState.currentStepIndex + 1} of {workoutPlan.steps.length}
-          </div>
+    <div className="space-y-3">
+      {/* Overall Progress */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <div className="text-sm font-medium text-gray-700 mb-3">Overall Progress</div>
+        <div className="flex justify-between items-center text-lg text-gray-600 mb-2">
+          <span className="font-bold">{Math.round(totalProgress * 100)}%</span>
+          <span>{formatTime(workoutEngine.getRemainingTime())} left</span>
         </div>
-
-        {/* Total Progress */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
-            <span>Total Progress</span>
-            <span>{Math.round(totalProgress * 100)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${totalProgress * 100}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Remaining: {formatTime(workoutEngine.getRemainingTime())}</span>
-            <span>Total: {formatTime(workoutPlan.totalDuration * 1000)}</span>
-          </div>
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div
+            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+            style={{ width: `${totalProgress * 100}%` }}
+          ></div>
         </div>
       </div>
 
       {/* Current Step */}
       {currentStep && (
-        <div className={`rounded-xl p-6 shadow-sm border-2 ${getStepTypeColor(currentStep.type)}`}>
-          <div className="flex items-center justify-between mb-4">
+        <div className={`rounded-lg p-4 shadow-sm border-2 ${getStepTypeColor(currentStep.type)}`}>
+          <div className="text-sm font-medium text-gray-700 mb-3">Current Step</div>
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-3">
               <span className="text-2xl">{getStepTypeIcon(currentStep.type)}</span>
-              <div>
-                <h3 className="text-lg font-bold">
-                  {currentStep.name || `Step ${engineState.currentStepIndex + 1}`}
-                </h3>
-                <p className="text-sm opacity-75">{currentStep.description}</p>
-              </div>
+              <span className="text-lg font-medium opacity-75">{currentStep.type}</span>
             </div>
-            <div className="text-right">
-              <div className="text-lg font-bold">
-                {formatTime(workoutEngine.getStepRemainingTime())}
-              </div>
-              <div className="text-sm opacity-75">remaining</div>
+            <div className="text-xl font-bold">
+              {formatTime(workoutEngine.getStepRemainingTime())}
             </div>
           </div>
 
           {/* Step Progress */}
           <div className="mb-4">
-            <div className="w-full bg-white bg-opacity-50 rounded-full h-2">
+            <div className="w-full bg-white bg-opacity-50 rounded-full h-3">
               <div
-                className="bg-current h-2 rounded-full transition-all duration-300"
+                className="bg-current h-3 rounded-full transition-all duration-300"
                 style={{ width: `${stepProgress * 100}%` }}
               ></div>
             </div>
           </div>
 
           {/* Target Metrics */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-xl font-bold">{currentStep.targetMetrics.resistance || 0}%</div>
-              <div className="text-xs opacity-75">Resistance</div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-xl">🏔️</span>
+              <span className="text-lg font-bold">{currentStep.targetMetrics.resistance || 0}</span>
+              <span className="text-sm opacity-75">%</span>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold">{currentStep.targetMetrics.cadence || 0}</div>
-              <div className="text-xs opacity-75">RPM</div>
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-xl">🔄</span>
+              <span className="text-lg font-bold">{currentStep.targetMetrics.cadence || 0}</span>
+              <span className="text-sm opacity-75">rpm</span>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold">{currentStep.targetMetrics.power || 0}W</div>
-              <div className="text-xs opacity-75">Power</div>
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-xl">⚡</span>
+              <span className="text-lg font-bold">{currentStep.targetMetrics.power || 0}</span>
+              <span className="text-sm opacity-75">W</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Live Metrics */}
-      <LiveMetrics isActive={engineState.isActive} />
+      <LiveMetrics isActive={engineState.isActive} compact={true} />
+
+      {/* Workout Averages */}
+      <WorkoutAverages />
 
       {/* Workout Controls */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -409,43 +382,7 @@ export default function GuidedWorkout({
             Stop
           </button>
         </div>
-
-        {/* Step Navigation */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={handlePreviousStep}
-            disabled={engineState.currentStepIndex === 0}
-            className="py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            ← Previous Step
-          </button>
-          <button
-            onClick={handleNextStep}
-            disabled={engineState.currentStepIndex >= workoutPlan.steps.length - 1}
-            className="py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Next Step →
-          </button>
-        </div>
       </div>
-
-      {/* Next Step Preview */}
-      {nextStep && (
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-          <h4 className="font-medium text-gray-900 mb-2">Coming Next:</h4>
-          <div className="flex items-center space-x-3">
-            <span className="text-lg">{getStepTypeIcon(nextStep.type)}</span>
-            <div>
-              <div className="font-medium text-gray-900">
-                {nextStep.name || `Step ${engineState.currentStepIndex + 2}`}
-              </div>
-              <div className="text-sm text-gray-600">
-                {formatTime(nextStep.duration * 1000)} • {nextStep.targetMetrics.resistance || 0}% resistance
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

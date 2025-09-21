@@ -228,6 +228,8 @@ interface WorkoutState {
   isActive: boolean;
   currentMetrics: Record<string, number>;
   targetMetrics: Record<string, number>;
+  averageMetrics: Record<string, number>;
+  metricHistory: Record<string, number[]>;
   elapsedTime: number;
   currentStepTime: number;
   totalSteps: number;
@@ -241,11 +243,13 @@ interface WorkoutState {
   resetWorkout: () => void;
 }
 
-export const useWorkoutStore = create<WorkoutState>((set) => ({
+export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   // Initial state
   isActive: false,
   currentMetrics: {},
   targetMetrics: {},
+  averageMetrics: {},
+  metricHistory: {},
   elapsedTime: 0,
   currentStepTime: 0,
   totalSteps: 0,
@@ -253,7 +257,29 @@ export const useWorkoutStore = create<WorkoutState>((set) => ({
 
   // Actions
   updateMetrics: (metrics) => {
-    set({ currentMetrics: metrics });
+    const state = get();
+    const newHistory = { ...state.metricHistory };
+    const newAverages = { ...state.averageMetrics };
+
+    // Update history and calculate averages for each metric
+    Object.entries(metrics).forEach(([key, value]) => {
+      if (value > 0) { // Only track positive values
+        if (!newHistory[key]) {
+          newHistory[key] = [];
+        }
+        newHistory[key].push(value);
+
+        // Calculate average
+        const sum = newHistory[key].reduce((acc, val) => acc + val, 0);
+        newAverages[key] = sum / newHistory[key].length;
+      }
+    });
+
+    set({
+      currentMetrics: metrics,
+      metricHistory: newHistory,
+      averageMetrics: newAverages
+    });
   },
 
   setTargetMetrics: (metrics) => {
@@ -277,6 +303,8 @@ export const useWorkoutStore = create<WorkoutState>((set) => ({
       isActive: false,
       currentMetrics: {},
       targetMetrics: {},
+      averageMetrics: {},
+      metricHistory: {},
       elapsedTime: 0,
       currentStepTime: 0,
       totalSteps: 0,

@@ -57,7 +57,6 @@ export class FTMSService {
 
       this.dataCharacteristic = await this.service.getCharacteristic(dataUUID);
       console.log('Got data characteristic');
-      console.log(this.dataCharacteristic);
 
       // Try to get control characteristic (optional)
       try {

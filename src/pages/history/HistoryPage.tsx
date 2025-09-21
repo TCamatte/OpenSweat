@@ -4,8 +4,9 @@ import WorkoutHistory from '@/components/analytics/WorkoutHistory';
 import PerformanceInsights from '@/components/analytics/PerformanceInsights';
 import PersonalRecords from '@/components/analytics/PersonalRecords';
 import DataExport from '@/components/analytics/DataExport';
+import DataManagement from '@/components/analytics/DataManagement';
 
-type TabType = 'summary' | 'history' | 'insights' | 'records' | 'export';
+type TabType = 'summary' | 'history' | 'insights' | 'records' | 'export' | 'manage';
 
 export default function HistoryPage() {
   const [activeTab, setActiveTab] = useState<TabType>('summary');
@@ -15,7 +16,8 @@ export default function HistoryPage() {
     { id: 'history' as TabType, label: 'History', icon: '📋' },
     { id: 'insights' as TabType, label: 'Insights', icon: '📈' },
     { id: 'records' as TabType, label: 'Records', icon: '🏆' },
-    { id: 'export' as TabType, label: 'Export', icon: '📤' }
+    { id: 'export' as TabType, label: 'Export', icon: '📤' },
+    { id: 'manage' as TabType, label: 'Manage', icon: '⚙️' }
   ];
 
   const renderContent = () => {
@@ -30,6 +32,8 @@ export default function HistoryPage() {
         return <PersonalRecords />;
       case 'export':
         return <DataExport />;
+      case 'manage':
+        return <DataManagement />;
       default:
         return <WorkoutSummary />;
     }
