@@ -1,6 +1,2 @@
-# robots.txt for Domyos Workout Trainer PWA
 User-agent: *
 Allow: /
-
-# Sitemap (if you add one later)
-# Sitemap: https://yourdomain.com/sitemap.xml

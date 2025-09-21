@@ -208,7 +208,7 @@ export const useAppStore = create<AppState>()(
       }
     }),
     {
-      name: 'domyos-app-store',
+      name: 'opensweat-app-store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist certain parts of the state to localStorage

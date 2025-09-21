@@ -53,7 +53,7 @@ export default defineConfig({
         orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
-        id: 'domyos-workout-trainer',
+        id: 'open-sweat',
         categories: ['fitness', 'sports', 'health'],
         lang: 'en',
         dir: 'ltr',

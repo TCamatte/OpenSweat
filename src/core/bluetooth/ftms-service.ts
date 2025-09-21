@@ -17,6 +17,7 @@ export class FTMSService {
   private static readonly TREADMILL_DATA_UUID = 0x2ACD;
   private static readonly FITNESS_MACHINE_CONTROL_POINT_UUID = 0x2AD9;
   private static readonly FITNESS_MACHINE_STATUS_UUID = 0x2ADA;
+  private static readonly SUPPORTED_RESISTANCE_LEVEL_RANGE = 0x2AD6;
 
   async connect(equipmentType: 'bike' | 'treadmill' | 'rower' = 'bike'): Promise<BluetoothDevice> {
     if (!('bluetooth' in navigator)) {
@@ -56,6 +57,7 @@ export class FTMSService {
 
       this.dataCharacteristic = await this.service.getCharacteristic(dataUUID);
       console.log('Got data characteristic');
+      console.log(this.dataCharacteristic);
 
       // Try to get control characteristic (optional)
       try {
@@ -65,6 +67,14 @@ export class FTMSService {
         console.log('Got control characteristic');
       } catch (error) {
         console.warn('Control characteristic not available:', error);
+      }
+
+      try{
+        var resLevels = await this.service.getCharacteristic(FTMSService.SUPPORTED_RESISTANCE_LEVEL_RANGE);
+        console.log("Got Res levels:")
+        console.log(resLevels);
+      }catch (error) {
+        console.warn('Resistance characteristics not available:', error);
       }
 
       // Start notifications for data
