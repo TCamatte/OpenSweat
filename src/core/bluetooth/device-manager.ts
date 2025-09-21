@@ -155,6 +155,50 @@ export class DeviceManager {
   async updateLastConnected(equipmentId: string): Promise<void> {
     return storageManager.updateLastConnected(equipmentId);
   }
+
+  async getLastConnectedEquipment(): Promise<EquipmentProfile | null> {
+    try {
+      const equipment = await storageManager.getEquipment();
+      // Return the most recently connected equipment
+      return equipment.length > 0 ? equipment[0] : null; // Already sorted by lastConnected DESC
+    } catch (error) {
+      console.error('Failed to get last connected equipment:', error);
+      return null;
+    }
+  }
+
+  async attemptAutoReconnect(): Promise<boolean> {
+    try {
+      console.log('Attempting auto-reconnect to last connected equipment...');
+      const lastEquipment = await this.getLastConnectedEquipment();
+
+      if (!lastEquipment) {
+        console.log('No previously connected equipment found');
+        return false;
+      }
+
+      console.log(`Attempting to reconnect to ${lastEquipment.name} (${lastEquipment.type})`);
+
+      // Try to reconnect using the stored equipment type
+      const reconnectedEquipment = await this.connectToEquipment(lastEquipment.type);
+
+      // Update the lastConnected timestamp for the reconnected equipment
+      await this.updateLastConnected(reconnectedEquipment.id);
+
+      // Check if we connected to the same device (by ID)
+      if (reconnectedEquipment.id === lastEquipment.id) {
+        console.log(`Successfully reconnected to ${lastEquipment.name}`);
+        return true;
+      } else {
+        console.log(`Connected to a different device: ${reconnectedEquipment.name}`);
+        return true; // Still a successful connection, just not the same device
+      }
+
+    } catch (error) {
+      console.log('Auto-reconnect failed:', error);
+      return false;
+    }
+  }
 }
 
 // Singleton instance

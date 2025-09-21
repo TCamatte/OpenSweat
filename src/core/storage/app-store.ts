@@ -8,6 +8,7 @@ import {
   EquipmentProfile
 } from '@/types';
 import { storageManager } from './local-storage-manager';
+import { deviceManager } from '@/core/bluetooth/device-manager';
 
 interface AppState extends UIState {
   // Settings
@@ -39,6 +40,7 @@ interface AppState extends UIState {
   previousWorkoutStep: () => void;
   loadRecentSessions: () => Promise<void>;
   loadSettings: () => Promise<void>;
+  attemptAutoReconnect: () => Promise<void>;
 }
 
 const defaultSettings: AppSettings = {
@@ -57,6 +59,9 @@ const defaultSettings: AppSettings = {
     workoutReminders: true,
     achievements: true,
     deviceConnection: true
+  },
+  bluetooth: {
+    autoReconnect: true
   },
   privacy: {
     storeHeartRate: true,
@@ -204,6 +209,32 @@ export const useAppStore = create<AppState>()(
           set({ settings });
         } catch (error) {
           console.error('Failed to load settings:', error);
+        }
+      },
+
+      attemptAutoReconnect: async () => {
+        try {
+          const { settings } = get();
+
+          if (!settings.bluetooth.autoReconnect) {
+            console.log('Auto-reconnect is disabled in settings');
+            return;
+          }
+
+          console.log('Starting auto-reconnect attempt...');
+          const success = await deviceManager.attemptAutoReconnect();
+
+          if (success) {
+            const currentEquipment = deviceManager.getCurrentEquipment();
+            if (currentEquipment) {
+              get().setConnectedEquipment(currentEquipment);
+              console.log('Auto-reconnect successful');
+            }
+          } else {
+            console.log('Auto-reconnect failed or no previous equipment found');
+          }
+        } catch (error) {
+          console.error('Auto-reconnect error:', error);
         }
       }
     }),

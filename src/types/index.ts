@@ -111,6 +111,9 @@ export interface AppSettings {
     achievements: boolean;
     deviceConnection: boolean;
   };
+  bluetooth: {
+    autoReconnect: boolean;
+  };
   privacy: {
     storeHeartRate: boolean;
     shareAnalytics: boolean;

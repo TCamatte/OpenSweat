@@ -18,7 +18,8 @@ function App() {
   const {
     setOnlineStatus,
     loadSettings,
-    loadRecentSessions
+    loadRecentSessions,
+    attemptAutoReconnect
   } = useAppStore();
 
   useEffect(() => {
@@ -27,6 +28,12 @@ function App() {
       try {
         await loadSettings();
         await loadRecentSessions();
+
+        // Attempt to auto-reconnect to the last connected equipment
+        // Add a small delay to ensure the app is fully initialized
+        setTimeout(async () => {
+          await attemptAutoReconnect();
+        }, 1000);
       } catch (error) {
         console.error('Failed to initialize app:', error);
       }
@@ -40,7 +47,7 @@ function App() {
     });
 
     return unsubscribe;
-  }, [setOnlineStatus, loadSettings, loadRecentSessions]);
+  }, [setOnlineStatus, loadSettings, loadRecentSessions, attemptAutoReconnect]);
 
   return (
     <Router>

@@ -19,10 +19,10 @@ export default function WorkoutStepEditor({
     duration: step?.duration || 60, // 5 minutes default
     type: step?.type || 'steady',
     targetMetrics: {
-      resistance: step?.targetMetrics?.resistance || 50,
-      cadence: step?.targetMetrics?.cadence || 80,
-      power: step?.targetMetrics?.power || 150,
-      heartRate: step?.targetMetrics?.heartRate || 140,
+      resistance: step?.targetMetrics?.resistance || 20,
+      cadence: step?.targetMetrics?.cadence || 60,
+      power: step?.targetMetrics?.power || 180,
+      heartRate: step?.targetMetrics?.heartRate || 100,
       ...step?.targetMetrics
     }
   });
@@ -167,9 +167,9 @@ export default function WorkoutStepEditor({
                     <div className="flex items-center space-x-2">
                       <input
                         type="number"
-                        value={formData.targetMetrics?.resistance || 0}
+                        value={formData.targetMetrics?.resistance || 20}
                         onChange={(e) => {
-                          const value = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                          const value = Math.min(32, Math.max(1, parseInt(e.target.value) || 20));
                           setFormData({
                             ...formData,
                             targetMetrics: {
@@ -178,8 +178,8 @@ export default function WorkoutStepEditor({
                             }
                           });
                         }}
-                        min="0"
-                        max="100"
+                        min="1"
+                        max="32"
                         className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center"
                       />
                       <span className="text-sm text-gray-500">%</span>
@@ -187,9 +187,9 @@ export default function WorkoutStepEditor({
                   </div>
                   <input
                     type="range"
-                    min="0"
-                    max="100"
-                    value={formData.targetMetrics?.resistance || 0}
+                    min="1"
+                    max="32"
+                    value={formData.targetMetrics?.resistance || 20}
                     onChange={(e) => setFormData({
                       ...formData,
                       targetMetrics: {
@@ -208,9 +208,9 @@ export default function WorkoutStepEditor({
                     <div className="flex items-center space-x-2">
                       <input
                         type="number"
-                        value={formData.targetMetrics?.cadence || 80}
+                        value={formData.targetMetrics?.cadence || 60}
                         onChange={(e) => {
-                          const value = Math.min(120, Math.max(40, parseInt(e.target.value) || 80));
+                          const value = Math.min(100, Math.max(40, parseInt(e.target.value) || 60));
                           setFormData({
                             ...formData,
                             targetMetrics: {
@@ -220,7 +220,7 @@ export default function WorkoutStepEditor({
                           });
                         }}
                         min="40"
-                        max="120"
+                        max="100"
                         className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center"
                       />
                       <span className="text-sm text-gray-500">rpm</span>
@@ -230,7 +230,7 @@ export default function WorkoutStepEditor({
                     type="range"
                     min="40"
                     max="120"
-                    value={formData.targetMetrics?.cadence || 80}
+                    value={formData.targetMetrics?.cadence || 60}
                     onChange={(e) => setFormData({
                       ...formData,
                       targetMetrics: {
@@ -249,9 +249,9 @@ export default function WorkoutStepEditor({
                     <div className="flex items-center space-x-2">
                       <input
                         type="number"
-                        value={formData.targetMetrics?.power || 150}
+                        value={formData.targetMetrics?.power || 180}
                         onChange={(e) => {
-                          const value = Math.min(400, Math.max(50, parseInt(e.target.value) || 150));
+                          const value = Math.min(400, Math.max(50, parseInt(e.target.value) || 180));
                           setFormData({
                             ...formData,
                             targetMetrics: {
@@ -271,7 +271,7 @@ export default function WorkoutStepEditor({
                     type="range"
                     min="50"
                     max="400"
-                    value={formData.targetMetrics?.power || 150}
+                    value={formData.targetMetrics?.power || 180}
                     onChange={(e) => setFormData({
                       ...formData,
                       targetMetrics: {
