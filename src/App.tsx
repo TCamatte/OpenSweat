@@ -67,6 +67,22 @@ function App() {
     };
   }, [activeWorkout]);
 
+  // Prevent pull-to-refresh on Chrome for Android when workout is active
+  useEffect(() => {
+    if (activeWorkout && !activeWorkout.isPaused) {
+      console.log("overscrollBehaviorY");
+      document.body.style.overscrollBehavior = 'contain';
+    } else {
+      document.body.style.overscrollBehavior = 'contain';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      console.log("unmount");
+      document.body.style.overscrollBehaviorY = 'contain';
+    };
+  }, [activeWorkout]);
+
   return (
     <Router>
       <div className="app">

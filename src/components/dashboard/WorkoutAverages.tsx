@@ -3,7 +3,8 @@ import { useWorkoutStore } from '@/core/storage/app-store';
 export default function WorkoutAverages() {
   const { averageMetrics, isActive } = useWorkoutStore();
 
-  if (!isActive || Object.keys(averageMetrics).length === 0) {
+  if (Object.keys(averageMetrics).length === 0) {
+    console.log("Can't display averages");
     return null;
   }
 

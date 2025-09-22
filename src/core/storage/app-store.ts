@@ -294,7 +294,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
 
     // Update history and calculate averages for each metric
     Object.entries(metrics).forEach(([key, value]) => {
-      if (value > 0) { // Only track positive values
+      if (value >= 0) { // Only track positive values
         if (!newHistory[key]) {
           newHistory[key] = [];
         }
@@ -305,6 +305,10 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
         newAverages[key] = sum / newHistory[key].length;
       }
     });
+
+    console.log("new averages");
+    console.log(metrics);
+    console.log(newAverages);
 
     set({
       currentMetrics: metrics,

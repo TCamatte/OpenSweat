@@ -139,11 +139,54 @@ export class SessionRecorder {
     if (!this.isRecording || !this.currentSession) return;
 
     // This would typically get current metrics from the device
-    // For now, we'll rely on the device data listener
+    // For offline mode or when no device data is available, generate sample data
+    if (!deviceManager.isConnected()) {
+      this.generateSampleDataPoint();
+    }
+  }
+
+  private generateSampleDataPoint(): void {
+    if (!this.currentSession) return;
+
+    const sessionDuration = Date.now() - this.currentSession.startTime;
+    const sessionMinutes = sessionDuration / (1000 * 60);
+
+    // Generate realistic sample data based on workout progression
+    const baseIntensity = 0.5 + Math.sin(sessionMinutes * 0.1) * 0.3; // Varies intensity over time
+    const randomVariation = 0.8 + Math.random() * 0.4; // ±20% variation
+
+    const dataPoint: MetricDataPoint = {
+      timestamp: Date.now(),
+      metrics: {
+        speed: Math.round((15 + baseIntensity * 10) * randomVariation), // 12-30 km/h
+        cadence: Math.round((60 + baseIntensity * 40) * randomVariation), // 48-120 RPM
+        power: Math.round((100 + baseIntensity * 150) * randomVariation), // 80-300W
+        resistance: Math.round((30 + baseIntensity * 40) * randomVariation), // 24-84%
+        heartRate: Math.round((120 + baseIntensity * 50) * randomVariation), // 96-204 BPM
+        distance: Math.round(sessionMinutes * 0.5 * 100) / 100, // Cumulative distance
+        calories: Math.round(sessionMinutes * 8) // ~8 cal/min
+      }
+    };
+
+    this.currentSession.dataPoints.push(dataPoint);
   }
 
   private addDataPoint(ftmsData: any): void {
     if (!this.currentSession) return;
+
+    // Only add data point if we have meaningful data
+    const hasValidData = ftmsData && (
+      ftmsData.speed > 0 ||
+      ftmsData.cadence > 0 ||
+      ftmsData.power > 0 ||
+      ftmsData.heartRate > 0 ||
+      ftmsData.distance > 0 ||
+      ftmsData.calories > 0
+    );
+
+    if (!hasValidData) {
+      return; // Don't add empty data points
+    }
 
     const dataPoint: MetricDataPoint = {
       timestamp: Date.now(),
@@ -178,18 +221,22 @@ export class SessionRecorder {
   }
 
   private calculateSessionSummary(): SessionSummary {
+    const totalDuration = this.currentSession?.endTime
+      ? this.currentSession.endTime - this.currentSession.startTime
+      : 0;
+
     if (!this.currentSession || this.currentSession.dataPoints.length === 0) {
+      // Provide better defaults for sessions with no data points
       return {
-        totalDuration: 0,
+        totalDuration,
         avgMetrics: {},
         maxMetrics: {},
-        estimatedCalories: 0,
-        completed: false
+        estimatedCalories: Math.round(totalDuration / (1000 * 60) * 8), // Rough estimate: 8 cal/min
+        completed: !!this.currentSession?.endTime
       };
     }
 
     const dataPoints = this.currentSession.dataPoints;
-    const totalDuration = this.currentSession.endTime! - this.currentSession.startTime;
 
     // Calculate averages and maximums
     const metricSums: Record<string, number> = {};

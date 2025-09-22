@@ -285,17 +285,18 @@ export class LocalStorageManager {
     startTime: number,
     endTime?: number
   ): SessionSummary {
+    const duration = endTime ? endTime - startTime : Date.now() - startTime;
+
     if (dataPoints.length === 0) {
       return {
-        totalDuration: 0,
+        totalDuration: duration,
         avgMetrics: {},
         maxMetrics: {},
-        estimatedCalories: 0,
-        completed: false
+        estimatedCalories: Math.round(duration / (1000 * 60) * 8), // Rough estimate: 8 cal/min
+        completed: !!endTime
       };
     }
 
-    const duration = endTime ? endTime - startTime : Date.now() - startTime;
     const metrics: Record<string, number[]> = {};
 
     // Collect all metric values
